@@ -28,13 +28,14 @@ const docRef = doc(db, 'chore-tracker', DOC_ID);
 // Expose to global scope for use by non-module JS below
 let saveChain = Promise.resolve();
 
-window.fbSave = function(dataObj, optObj, startDateISO, goalsObj, bonusObj) {
+window.fbSave = function(dataObj, optObj, startDateISO, goalsObj, bonusObj, updatedAtMs) {
   const payload = {
     data: JSON.stringify(dataObj),
     opt: JSON.stringify(optObj),
     startDate: startDateISO || '',
     goals: JSON.stringify(goalsObj||{}),
-    goalBonusFired: JSON.stringify(bonusObj||{})
+    goalBonusFired: JSON.stringify(bonusObj||{}),
+    updatedAt: Number.isFinite(updatedAtMs) ? updatedAtMs : Date.now()
   };
   saveChain = saveChain.then(async () => {
     setSyncStatus('saving');
@@ -60,13 +61,13 @@ window.fbListen = function(onUpdate) {
         const sdStr    = d.startDate       || '';
         const goalsObj = d.goals           ? JSON.parse(d.goals)           : {};
         const bonusObj = d.goalBonusFired  ? JSON.parse(d.goalBonusFired)  : {};
-        onUpdate(dataObj, optObj, sdStr, goalsObj, bonusObj);
+        onUpdate(dataObj, optObj, sdStr, goalsObj, bonusObj, Number(d.updatedAt)||0);
         setSyncStatus('synced');
       } catch(e) {
         setSyncStatus('error');
       }
     } else {
-      onUpdate({}, {}, '', {}, {});
+      onUpdate({}, {}, '', {}, {}, 0);
       setSyncStatus('synced');
     }
   }, (err) => {
@@ -508,7 +509,7 @@ const DAYS = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
 const SESSIONS = ['Morning','Afternoon','Evening'];
 const ICONS = {Morning:'🌅',Afternoon:'☀️',Evening:'🌙'};
 const SCSS = {Morning:'s-morning',Afternoon:'s-afternoon',Evening:'s-evening'};
-const CHORES = ['Mop','Vacuum','Dish Clean & Dishwasher','Laundry','Sorting Clothes','Extra Exercise'];
+const CHORES = ['Mop','Vacuum','Dish Clean & Dishwasher','Laundry','Sorting Clothes','Extra Exercise','Other'];
 const WEEKS = 8;
 const STARS_LIST = ['⭐','🌟','✨','💫','🎉','🏆','🎊'];
 const MONEY_CAP = 6; // updated cap
@@ -516,6 +517,7 @@ const MONEY_CAP = 6; // updated cap
 let week=1, day=0, optP='jenn';
 let data={}, opt={};
 let startDate=null;
+let lastLocalMutationAt=0;
 // goals[w] = {jenn: N, jess: N}  — set by parent each week
 let goals={};
 // track whether goal bonus already fired this week per player
@@ -542,25 +544,37 @@ function init() {
 function save(){
   clearTimeout(window._saveTimer);
   window._saveTimer = setTimeout(()=>{
-    if(window.fbSave) window.fbSave(data, opt, startDate ? startDate.toISOString() : '', goals, goalBonusFired);
+    if(window.fbSave){
+      const stamp = lastLocalMutationAt || Date.now();
+      window.fbSave(data, opt, startDate ? startDate.toISOString() : '', goals, goalBonusFired, stamp);
+    }
   }, 800);
+}
+function markLocalMutation(){
+  lastLocalMutationAt = Date.now();
 }
 function load(){
   init();
   // Wait for Firebase module to finish loading before calling fbListen
   const startListen = () => {
     if(window.fbListen){
-      window.fbListen((dataObj, optObj, sdStr, goalsObj, bonusObj) => {
+      window.fbListen((dataObj, optObj, sdStr, goalsObj, bonusObj, remoteUpdatedAt=0) => {
+        // Guard against stale remote snapshots overwriting newer local edits.
+        if(lastLocalMutationAt && (!remoteUpdatedAt || remoteUpdatedAt < lastLocalMutationAt)) return;
         if(Object.keys(dataObj).length) data = dataObj;
         if(Object.keys(optObj).length)  opt  = optObj;
         if(goalsObj && Object.keys(goalsObj).length) goals = goalsObj;
         if(bonusObj && Object.keys(bonusObj).length) goalBonusFired = bonusObj;
+        if(remoteUpdatedAt && remoteUpdatedAt >= lastLocalMutationAt) lastLocalMutationAt = 0;
         init();
         if(sdStr){
           startDate = new Date(sdStr);
           document.getElementById('startDateInput').value = toISO(startDate);
         }
-        syncWeekDayToToday();
+        if(!window._didInitialSyncToToday){
+          syncWeekDayToToday();
+          window._didInitialSyncToToday = true;
+        }
         updateDateRange();
         renderDayTabs();
         renderDayPanel();
@@ -619,6 +633,7 @@ function onStartDateChange(){
   const dow=d.getDay();
   d.setDate(d.getDate()+(dow===1?0:dow===0?-6:1-dow));
   startDate=d;
+  markLocalMutation();
   document.getElementById('startDateInput').value=toISO(d);
   syncWeekDayToToday();
   updateDateRange();renderDayTabs();renderDayPanel();updateScores();refreshParentPanel();save();
@@ -626,6 +641,8 @@ function onStartDateChange(){
 function updateDateRange(){
   const dates=getWeekDates(week);
   if(dates[0])document.getElementById('dateRange').textContent=`Week ${week}: ${fmt(dates[0])} – ${fmt(dates[6])}`;
+  const startRow = document.querySelector('.date-row');
+  if(startRow) startRow.style.display = week===1 ? 'flex' : 'none';
 }
 
 // Scoring
@@ -754,9 +771,7 @@ function updateScores(){
     document.getElementById(`c${id}Bar`).style.width=Math.min(100,Math.round(totM/(WEEKS*21)*100))+'%';
   }
   const js=streak('jenn'),ks=streak('jess');
-  let sh='';
-  if(js>0)sh+=`<span class="streak-chip">🔥 Jenn ${js}-day streak</span>`;
-  if(ks>0)sh+=`<span class="streak-chip">🔥 Jess ${ks}-day streak</span>`;
+  const sh=`<span class="streak-chip">🔥 Jenn ${js}-day streak</span><span class="streak-chip">🔥 Jess ${ks}-day streak</span>`;
   document.getElementById('streakRow').innerHTML=sh;
   updateChart();
 }
@@ -854,6 +869,7 @@ function togMand(s,p,e){
   requestUnlock('action', ()=>{
     const prev=data[week][day][s][p];
     data[week][day][s][p]=!prev;
+    markLocalMutation();
     save();renderDayPanel();renderDayTabs();updateScores();
     if(!prev){
       spawnStars(e.clientX,e.clientY);
@@ -872,6 +888,7 @@ function togOpt(chore,e){
     if(!c)return;
     const prev=opt[week][day][optP][c];
     opt[week][day][optP][c]=!prev;
+    markLocalMutation();
     save();renderDayPanel();updateScores();
     if(!prev){spawnStars(e.clientX,e.clientY);toast(`⭐ Bonus chore done! Counts toward this week's pocket money!`);}
   });
@@ -934,6 +951,7 @@ function clearWeek(){
       for(const s of SESSIONS) data[week][d][s]={jenn:false,jess:false};
       opt[week][d]={jenn:{},jess:{}};
     }
+    markLocalMutation();
     save();renderDayPanel();renderDayTabs();updateScores();
     toast(`🗑️ Week ${week} cleared.`);
   });
@@ -1105,6 +1123,7 @@ function saveGoals(){
   // If goal changed, reset bonus fired flag
   if(goals[week].jenn!==jv){goals[week].jenn=jv;if(goalBonusFired[week])goalBonusFired[week].jenn=false;}
   if(goals[week].jess!==kv){goals[week].jess=kv;if(goalBonusFired[week])goalBonusFired[week].jess=false;}
+  markLocalMutation();
   save();
   updateScores();
   refreshParentPanel();
@@ -1135,7 +1154,10 @@ if(!startDate){
   startDate=d;
   document.getElementById('startDateInput').value=toISO(d);
 }
-syncWeekDayToToday();
+if(!window._didInitialSyncToToday){
+  syncWeekDayToToday();
+  window._didInitialSyncToToday = true;
+}
 updateDateRange();renderDayTabs();renderDayPanel();updateScores();
 </script>
 </body>
