@@ -555,6 +555,7 @@ function load(){
           startDate = new Date(sdStr);
           document.getElementById('startDateInput').value = toISO(startDate);
         }
+        syncWeekDayToToday();
         updateDateRange();
         renderDayTabs();
         renderDayPanel();
@@ -571,6 +572,34 @@ function load(){
   }
 }
 function toISO(d){return d.toISOString().split('T')[0];}
+function daysSinceProgramStart(calDay){
+  if(!startDate)return -1;
+  const anchor=new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate());
+  const cur=new Date(calDay.getFullYear(),calDay.getMonth(),calDay.getDate());
+  if(cur<anchor)return -1;
+  let n=0;
+  const x=new Date(anchor);
+  while(x<cur){
+    x.setDate(x.getDate()+1);
+    n++;
+  }
+  return n;
+}
+function syncWeekDayToToday(){
+  if(!startDate)return;
+  const t=new Date();
+  const cur=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  const diff=daysSinceProgramStart(cur);
+  if(diff<0){
+    week=1;day=0;
+  } else if(diff>=WEEKS*7){
+    week=WEEKS;day=6;
+  } else {
+    week=Math.floor(diff/7)+1;
+    day=diff%7;
+  }
+  document.getElementById('weekLabel').textContent=`Week ${week}`;
+}
 function getWeekDates(w){
   if(!startDate)return Array(7).fill(null);
   const b=new Date(startDate);
@@ -586,7 +615,8 @@ function onStartDateChange(){
   d.setDate(d.getDate()+(dow===1?0:dow===0?-6:1-dow));
   startDate=d;
   document.getElementById('startDateInput').value=toISO(d);
-  updateDateRange();renderDayTabs();save();
+  syncWeekDayToToday();
+  updateDateRange();renderDayTabs();renderDayPanel();updateScores();refreshParentPanel();save();
 }
 function updateDateRange(){
   const dates=getWeekDates(week);
@@ -1076,6 +1106,7 @@ if(!startDate){
   startDate=d;
   document.getElementById('startDateInput').value=toISO(d);
 }
+syncWeekDayToToday();
 updateDateRange();renderDayTabs();renderDayPanel();updateScores();
 </script>
 </body>
