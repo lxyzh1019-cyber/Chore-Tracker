@@ -363,7 +363,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
     </div>
   </div>
   <div class="date-row">
-    <label>Week 1 Monday:</label>
+    <label id="startDateLabel">Week 1 Monday:</label>
     <input type="date" class="date-input" id="startDateInput" onchange="onStartDateChange()">
     <span class="date-range" id="dateRange"></span>
   </div>
@@ -641,8 +641,11 @@ function onStartDateChange(){
 function updateDateRange(){
   const dates=getWeekDates(week);
   if(dates[0])document.getElementById('dateRange').textContent=`Week ${week}: ${fmt(dates[0])} – ${fmt(dates[6])}`;
-  const startRow = document.querySelector('.date-row');
-  if(startRow) startRow.style.display = week===1 ? 'flex' : 'none';
+  const startDateLabel=document.getElementById('startDateLabel');
+  const startDateInput=document.getElementById('startDateInput');
+  const showStartControls=week===1;
+  if(startDateLabel)startDateLabel.style.display=showStartControls?'inline':'none';
+  if(startDateInput)startDateInput.style.display=showStartControls?'inline-block':'none';
 }
 
 // Scoring
@@ -704,7 +707,10 @@ function weekDaySlotFromDayIndex(diff){
 function streak(p){
   if(!startDate)return 0;
   const t=new Date();
+  // Treat the "current streak day" boundary as 6:00 PM local time.
+  const useToday=t.getHours()>=18;
   let cur=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  if(!useToday)cur.setDate(cur.getDate()-1);
   let n=0;
   while(true){
     const diff=daysSinceStartDate(cur);
