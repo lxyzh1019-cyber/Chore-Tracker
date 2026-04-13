@@ -616,10 +616,16 @@ function syncWeekDayToToday(){
   }
   document.getElementById('weekLabel').textContent=`Week ${week}`;
 }
-// One-time jump to current week/day on load. Only mark complete once startDate exists,
-// so an early Firestore snapshot (before startDate is known) cannot skip the real sync.
+// One-time jump to current week/day on load when locked (view mode). When unlocked
+// (parent editing), never auto-jump — keep the week/day the user chose.
+// Also: only mark complete once startDate exists, so an early snapshot before
+// startDate is known cannot skip the real sync.
 function tryInitialSyncToToday(){
   if(window._didInitialSyncToToday || !startDate)return;
+  if(unlocked){
+    window._didInitialSyncToToday = true;
+    return;
+  }
   syncWeekDayToToday();
   window._didInitialSyncToToday = true;
 }
@@ -1109,6 +1115,9 @@ function lockApp(){
   document.getElementById('lockChip').style.display='none';
   document.getElementById('viewChip').style.display='inline-flex';
   document.getElementById('parentPanel').style.display='none';
+  // View mode: always show the current program week after locking.
+  syncWeekDayToToday();
+  updateDateRange();renderDayTabs();renderDayPanel();updateScores();
   toast('🔒 已锁定');
 }
 function changePwd(){
