@@ -123,12 +123,12 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .btn-refresh { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff; padding:6px 14px; border-radius:99px; font-family:'Nunito',sans-serif; font-size:.85rem; font-weight:800; cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:5px; }
 .btn-refresh:hover { background:rgba(255,255,255,.22); }
 .week-label { font-family:'Fredoka One',cursive; font-size:1.05rem; min-width:72px; text-align:center; }
-.week-dates-sub { font-size:1.08rem; font-weight:800; color:#fff; letter-spacing:.2px; text-align:right; margin-top:2px; white-space:nowrap; }
-.streak-start-row { margin-top:10px; display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; }
-.streak-start-row .start-date-label { font-size:.95rem; font-weight:700; opacity:.88; }
-.streak-start-row .date-input { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; padding:6px 12px; border-radius:8px; font-family:'Nunito',sans-serif; font-size:.95rem; cursor:pointer; }
-.streak-start-row .date-input:focus { outline:none; border-color:rgba(255,255,255,.5); }
-.streak-chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; flex:1; min-width:0; }
+.week-dates-sub { font-size:1.08rem; font-weight:800; color:#fff; letter-spacing:.2px; white-space:nowrap; }
+.header-week-meta { margin-top:6px; display:flex; flex-wrap:wrap; align-items:center; gap:10px 14px; justify-content:flex-end; max-width:100%; }
+.header-week-meta .start-date-label { font-size:.95rem; font-weight:700; opacity:.88; }
+.header-week-meta .date-input { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; padding:6px 12px; border-radius:8px; font-family:'Nunito',sans-serif; font-size:.95rem; cursor:pointer; }
+.header-week-meta .date-input:focus { outline:none; border-color:rgba(255,255,255,.5); }
+.streak-chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
 .streak-chip { background:rgba(251,191,36,.2); border-radius:99px; padding:5px 12px; font-size:.88rem; font-weight:800; color:#FCD34D; }
 .header-toolbar { margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
 .header-toolbar .sync-status-inner { font-size:.88rem; font-weight:800; }
@@ -354,7 +354,8 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 
 @media(max-width:520px) {
   .header-week-col { align-items:flex-start; width:100%; }
-  .week-dates-sub { text-align:left; white-space:normal; }
+  .header-week-meta { justify-content:flex-start; }
+  .week-dates-sub { white-space:normal; }
 }
 @media(max-width:400px) { .app-title{font-size:1.2rem;} .score-pts{font-size:1.5rem;} }
 </style>
@@ -372,13 +373,13 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
         <div class="week-label" id="weekLabel">Week 1</div>
         <button onclick="changeWeek(1)">›</button>
       </div>
-      <div class="week-dates-sub" id="dateRange"></div>
+      <div class="header-week-meta">
+        <span class="week-dates-sub" id="dateRange"></span>
+        <label class="start-date-label" id="startDateLabel" for="startDateInput">Week 1 Monday:</label>
+        <input type="date" class="date-input" id="startDateInput" onchange="onStartDateChange()">
+        <div class="streak-chips" id="streakChips"></div>
+      </div>
     </div>
-  </div>
-  <div class="streak-start-row" id="streakStartRow">
-    <label class="start-date-label" id="startDateLabel" for="startDateInput">Week 1 Monday:</label>
-    <input type="date" class="date-input" id="startDateInput" onchange="onStartDateChange()">
-    <div class="streak-chips" id="streakChips"></div>
   </div>
   <div class="header-toolbar">
     <button type="button" class="btn-refresh" onclick="refreshPage()" title="Reload the page">↻ 刷新页面</button>
@@ -579,9 +580,14 @@ function load(){
         if(bonusObj && Object.keys(bonusObj).length) goalBonusFired = bonusObj;
         if(remoteUpdatedAt && remoteUpdatedAt >= lastLocalMutationAt) lastLocalMutationAt = 0;
         init();
+        const startBefore = startDate ? toISO(startDate) : '';
         if(sdStr){
           startDate = new Date(sdStr);
           document.getElementById('startDateInput').value = toISO(startDate);
+        }
+        // If Firestore supplies a different program start than we had, re-sync week while locked.
+        if(!unlocked && sdStr && startBefore !== toISO(startDate)){
+          syncWeekDayToToday();
         }
         tryInitialSyncToToday();
         updateDateRange();
