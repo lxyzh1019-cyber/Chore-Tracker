@@ -630,15 +630,39 @@ function checkGoalBonus(p){
   }
 }
 
-// Streak
-function streak(p){
+// Streak — consecutive calendar days (Mon–Sun weeks from start date) with all mandatory
+// sessions done, counting backward from today. Not tied to which week/day tab is selected.
+function daysSinceStartDate(calDay){
+  if(!startDate)return -1;
+  const anchor=new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate());
+  const cur=new Date(calDay.getFullYear(),calDay.getMonth(),calDay.getDate());
+  if(cur<anchor)return -1;
   let n=0;
-  for(let w=week;w>=1;w--){
-    const maxD=w===week?day:6;
-    for(let d=maxD;d>=0;d--){
-      if(SESSIONS.every(s=>data[w][d][s][p]))n++;
-      else return n;
-    }
+  const x=new Date(anchor);
+  while(x<cur){
+    x.setDate(x.getDate()+1);
+    n++;
+  }
+  return n;
+}
+function weekDaySlotFromDayIndex(diff){
+  if(diff<0||diff>=WEEKS*7)return null;
+  return{w:Math.floor(diff/7)+1,d:diff%7};
+}
+function streak(p){
+  if(!startDate)return 0;
+  const t=new Date();
+  let cur=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  let n=0;
+  while(true){
+    const diff=daysSinceStartDate(cur);
+    const slot=weekDaySlotFromDayIndex(diff);
+    if(!slot)break;
+    const{w,d}=slot;
+    if(!SESSIONS.every(s=>data[w][d][s][p]))break;
+    n++;
+    cur.setDate(cur.getDate()-1);
+    if(n>WEEKS*7)break;
   }
   return n;
 }
