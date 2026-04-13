@@ -571,7 +571,6 @@ function load(){
           startDate = new Date(sdStr);
           document.getElementById('startDateInput').value = toISO(startDate);
         }
-        tryInitialSyncToToday();
         updateDateRange();
         renderDayTabs();
         renderDayPanel();
@@ -588,47 +587,6 @@ function load(){
   }
 }
 function toISO(d){return d.toISOString().split('T')[0];}
-function daysSinceProgramStart(calDay){
-  if(!startDate)return -1;
-  const anchor=new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate());
-  const cur=new Date(calDay.getFullYear(),calDay.getMonth(),calDay.getDate());
-  if(cur<anchor)return -1;
-  let n=0;
-  const x=new Date(anchor);
-  while(x<cur){
-    x.setDate(x.getDate()+1);
-    n++;
-  }
-  return n;
-}
-function syncWeekDayToToday(){
-  if(!startDate)return;
-  const t=new Date();
-  const cur=new Date(t.getFullYear(),t.getMonth(),t.getDate());
-  const diff=daysSinceProgramStart(cur);
-  if(diff<0){
-    week=1;day=0;
-  } else if(diff>=WEEKS*7){
-    week=WEEKS;day=6;
-  } else {
-    week=Math.floor(diff/7)+1;
-    day=diff%7;
-  }
-  document.getElementById('weekLabel').textContent=`Week ${week}`;
-}
-// One-time jump to current week/day on load when locked (view mode). When unlocked
-// (parent editing), never auto-jump — keep the week/day the user chose.
-// Also: only mark complete once startDate exists, so an early snapshot before
-// startDate is known cannot skip the real sync.
-function tryInitialSyncToToday(){
-  if(window._didInitialSyncToToday || !startDate)return;
-  if(unlocked){
-    window._didInitialSyncToToday = true;
-    return;
-  }
-  syncWeekDayToToday();
-  window._didInitialSyncToToday = true;
-}
 function getWeekDates(w){
   if(!startDate)return Array(7).fill(null);
   const b=new Date(startDate);
@@ -645,7 +603,6 @@ function onStartDateChange(){
   startDate=d;
   markLocalMutation();
   document.getElementById('startDateInput').value=toISO(d);
-  syncWeekDayToToday();
   updateDateRange();renderDayTabs();renderDayPanel();updateScores();refreshParentPanel();save();
 }
 function updateDateRange(){
@@ -1115,9 +1072,6 @@ function lockApp(){
   document.getElementById('lockChip').style.display='none';
   document.getElementById('viewChip').style.display='inline-flex';
   document.getElementById('parentPanel').style.display='none';
-  // View mode: always show the current program week after locking.
-  syncWeekDayToToday();
-  updateDateRange();renderDayTabs();renderDayPanel();updateScores();
   toast('🔒 已锁定');
 }
 function changePwd(){
@@ -1173,7 +1127,6 @@ if(!startDate){
   startDate=d;
   document.getElementById('startDateInput').value=toISO(d);
 }
-tryInitialSyncToToday();
 updateDateRange();renderDayTabs();renderDayPanel();updateScores();
 </script>
 </body>
