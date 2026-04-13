@@ -26,26 +26,27 @@ const DOC_ID = 'family-data';
 const docRef = doc(db, 'chore-tracker', DOC_ID);
 
 // Expose to global scope for use by non-module JS below
-let isSaving = false;
+let saveChain = Promise.resolve();
 
-window.fbSave = async function(dataObj, optObj, startDateISO, goalsObj, bonusObj) {
-  if(isSaving) return;
-  isSaving = true;
-  setSyncStatus('saving');
-  try {
-    await setDoc(docRef, {
-      data: JSON.stringify(dataObj),
-      opt: JSON.stringify(optObj),
-      startDate: startDateISO || '',
-      goals: JSON.stringify(goalsObj||{}),
-      goalBonusFired: JSON.stringify(bonusObj||{})
-    });
-    setSyncStatus('saved');
-  } catch(e) {
-    console.error('Save error:', e);
-    setSyncStatus('error');
-  }
-  isSaving = false;
+window.fbSave = function(dataObj, optObj, startDateISO, goalsObj, bonusObj) {
+  const payload = {
+    data: JSON.stringify(dataObj),
+    opt: JSON.stringify(optObj),
+    startDate: startDateISO || '',
+    goals: JSON.stringify(goalsObj||{}),
+    goalBonusFired: JSON.stringify(bonusObj||{})
+  };
+  saveChain = saveChain.then(async () => {
+    setSyncStatus('saving');
+    try {
+      await setDoc(docRef, payload);
+      setSyncStatus('saved');
+    } catch(e) {
+      console.error('Save error:', e);
+      setSyncStatus('error');
+    }
+  });
+  return saveChain;
 };
 
 window.fbListen = function(onUpdate) {
