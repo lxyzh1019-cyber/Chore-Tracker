@@ -571,10 +571,7 @@ function load(){
           startDate = new Date(sdStr);
           document.getElementById('startDateInput').value = toISO(startDate);
         }
-        if(!window._didInitialSyncToToday){
-          syncWeekDayToToday();
-          window._didInitialSyncToToday = true;
-        }
+        tryInitialSyncToToday();
         updateDateRange();
         renderDayTabs();
         renderDayPanel();
@@ -618,6 +615,13 @@ function syncWeekDayToToday(){
     day=diff%7;
   }
   document.getElementById('weekLabel').textContent=`Week ${week}`;
+}
+// One-time jump to current week/day on load. Only mark complete once startDate exists,
+// so an early Firestore snapshot (before startDate is known) cannot skip the real sync.
+function tryInitialSyncToToday(){
+  if(window._didInitialSyncToToday || !startDate)return;
+  syncWeekDayToToday();
+  window._didInitialSyncToToday = true;
 }
 function getWeekDates(w){
   if(!startDate)return Array(7).fill(null);
@@ -1160,10 +1164,7 @@ if(!startDate){
   startDate=d;
   document.getElementById('startDateInput').value=toISO(d);
 }
-if(!window._didInitialSyncToToday){
-  syncWeekDayToToday();
-  window._didInitialSyncToToday = true;
-}
+tryInitialSyncToToday();
 updateDateRange();renderDayTabs();renderDayPanel();updateScores();
 </script>
 </body>
