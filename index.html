@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jenn & Jess — Chore Tracker</title>
+<title>Jenn & Jess Weekly Chore Challenge</title>
 <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka+One&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <!-- Firebase SDK -->
@@ -90,7 +90,7 @@ function setSyncStatus(state) {
     error:   ['❌', '#DC2626', '同步失败'],
   };
   const [icon, color, label] = map[state] || map.synced;
-  el.innerHTML = `<span style="color:${color};font-size:.75rem;font-weight:800;">${icon} ${label}</span>`;
+  el.innerHTML = `<span class="sync-status-inner" style="color:${color};font-weight:800;">${icon} ${label}</span>`;
 }
 </script>
 <style>
@@ -112,22 +112,27 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 
 /* HEADER */
 .app-header { background: linear-gradient(135deg,#0F172A,#1E293B); padding:16px 20px 14px; color:#fff; position:sticky; top:0; z-index:100; box-shadow:0 4px 20px rgba(0,0,0,.25); }
-.header-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; }
-.app-title { font-family:'Fredoka One',cursive; font-size:1.55rem; display:flex; align-items:center; gap:8px; }
+.header-top { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; }
+.app-title { font-family:'Fredoka One',cursive; font-size:1.55rem; display:flex; align-items:center; flex-wrap:wrap; gap:6px 8px; line-height:1.25; max-width:min(100%,420px); }
 .app-title .jenn { color:#FB7185; } .app-title .jess { color:#60A5FA; }
+.app-title .title-rest { color:#fff; font-size:0.62em; font-weight:400; font-family:'Nunito',sans-serif; }
+.header-week-col { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
 .week-nav { display:flex; align-items:center; gap:8px; }
 .week-nav button { background:rgba(255,255,255,.12); border:none; color:#fff; width:34px; height:34px; border-radius:50%; font-size:1.1rem; cursor:pointer; transition:.2s; display:flex; align-items:center; justify-content:center; }
 .week-nav button:hover { background:rgba(255,255,255,.25); }
-.btn-refresh { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff; padding:5px 12px; border-radius:99px; font-family:'Nunito',sans-serif; font-size:.72rem; font-weight:800; cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:5px; }
+.btn-refresh { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); color:#fff; padding:6px 14px; border-radius:99px; font-family:'Nunito',sans-serif; font-size:.85rem; font-weight:800; cursor:pointer; transition:.2s; display:inline-flex; align-items:center; gap:5px; }
 .btn-refresh:hover { background:rgba(255,255,255,.22); }
 .week-label { font-family:'Fredoka One',cursive; font-size:1.05rem; min-width:72px; text-align:center; }
-.date-row { margin-top:9px; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
-.date-row label { font-size:.8rem; opacity:.7; }
-.date-input { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; padding:5px 10px; border-radius:8px; font-family:'Nunito',sans-serif; font-size:.85rem; cursor:pointer; }
-.date-input:focus { outline:none; border-color:rgba(255,255,255,.5); }
-.date-range { font-size:1rem; font-weight:800; color:#fff; letter-spacing:.2px; }
-.streak-row { margin-top:8px; display:flex; gap:6px; flex-wrap:wrap; }
-.streak-chip { background:rgba(251,191,36,.2); border-radius:99px; padding:3px 10px; font-size:.75rem; font-weight:800; color:#FCD34D; }
+.week-dates-sub { font-size:1.08rem; font-weight:800; color:#fff; letter-spacing:.2px; text-align:right; margin-top:2px; white-space:nowrap; }
+.streak-start-row { margin-top:10px; display:flex; align-items:center; gap:10px 12px; flex-wrap:wrap; }
+.streak-start-row .start-date-label { font-size:.95rem; font-weight:700; opacity:.88; }
+.streak-start-row .date-input { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.25); color:#fff; padding:6px 12px; border-radius:8px; font-family:'Nunito',sans-serif; font-size:.95rem; cursor:pointer; }
+.streak-start-row .date-input:focus { outline:none; border-color:rgba(255,255,255,.5); }
+.streak-chips { display:flex; gap:8px; flex-wrap:wrap; align-items:center; flex:1; min-width:0; }
+.streak-chip { background:rgba(251,191,36,.2); border-radius:99px; padding:5px 12px; font-size:.88rem; font-weight:800; color:#FCD34D; }
+.header-toolbar { margin-top:8px; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+.header-toolbar .sync-status-inner { font-size:.88rem; font-weight:800; }
+.view-chip { display:inline-flex; align-items:center; gap:4px; background:rgba(100,116,139,.2); border-radius:99px; padding:5px 12px; font-size:.85rem; font-weight:800; color:#94A3B8; cursor:pointer; border:none; font-family:'Nunito',sans-serif; }
 .btn-clear { background:#DC2626; color:#fff; }
 .cumul-section { padding:14px 16px 20px; background:#F8FAFC; border-top:2px solid var(--border); }
 .cumul-title { font-family:'Fredoka One',cursive; font-size:1.05rem; color:var(--text); margin-bottom:12px; }
@@ -163,6 +168,7 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .lock-cancel:hover { color:#94A3B8; }
 /* unlocked indicator in header */
 .unlocked-chip { background:rgba(22,163,74,.25); border-radius:99px; padding:3px 10px; font-size:.72rem; font-weight:800; color:#4ADE80; display:inline-flex; align-items:center; gap:4px; cursor:pointer; }
+.unlocked-chip.header-toolbar-chip { font-size:.85rem; padding:5px 12px; }
 
 /* GOAL SECTION in score card */
 .goal-row { display:flex; align-items:center; gap:6px; margin-top:3px; }
@@ -346,6 +352,10 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 .toast { position:fixed; bottom:22px; left:50%; transform:translateX(-50%) translateY(120px); background:#0F172A; color:#fff; padding:12px 22px; border-radius:99px; font-weight:800; font-size:.83rem; z-index:400; transition:transform .35s cubic-bezier(.34,1.56,.64,1); white-space:nowrap; box-shadow:0 8px 30px rgba(0,0,0,.3); }
 .toast.show { transform:translateX(-50%) translateY(0); }
 
+@media(max-width:520px) {
+  .header-week-col { align-items:flex-start; width:100%; }
+  .week-dates-sub { text-align:left; white-space:normal; }
+}
 @media(max-width:400px) { .app-title{font-size:1.2rem;} .score-pts{font-size:1.5rem;} }
 </style>
 </head>
@@ -355,24 +365,26 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
 <!-- HEADER -->
 <div class="app-header">
   <div class="header-top">
-    <div class="app-title">⭐ <span class="jenn">Jenn</span> & <span class="jess">Jess</span></div>
-    <div class="week-nav">
-      <button onclick="changeWeek(-1)">‹</button>
-      <div class="week-label" id="weekLabel">Week 1</div>
-      <button onclick="changeWeek(1)">›</button>
+    <div class="app-title">⭐ <span class="jenn">Jenn</span> & <span class="jess">Jess</span> <span class="title-rest">Weekly Chore Challenge</span></div>
+    <div class="header-week-col">
+      <div class="week-nav">
+        <button onclick="changeWeek(-1)">‹</button>
+        <div class="week-label" id="weekLabel">Week 1</div>
+        <button onclick="changeWeek(1)">›</button>
+      </div>
+      <div class="week-dates-sub" id="dateRange"></div>
     </div>
   </div>
-  <div class="date-row">
-    <label id="startDateLabel">Week 1 Monday:</label>
+  <div class="streak-start-row" id="streakStartRow">
+    <label class="start-date-label" id="startDateLabel" for="startDateInput">Week 1 Monday:</label>
     <input type="date" class="date-input" id="startDateInput" onchange="onStartDateChange()">
-    <span class="date-range" id="dateRange"></span>
+    <div class="streak-chips" id="streakChips"></div>
   </div>
-  <div class="streak-row" id="streakRow"></div>
-  <div style="margin-top:5px;display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+  <div class="header-toolbar">
     <button type="button" class="btn-refresh" onclick="refreshPage()" title="Reload the page">↻ 刷新页面</button>
-    <div id="syncStatus"><span style="color:#64748B;font-size:.75rem;font-weight:800;">🔄 连接中…</span></div>
-    <div id="lockChip" style="display:none;" class="unlocked-chip" onclick="lockApp()">🔓 家长模式 · 点击锁定</div>
-    <div id="viewChip" style="display:inline-flex;align-items:center;gap:4px;background:rgba(100,116,139,.2);border-radius:99px;padding:3px 10px;font-size:.72rem;font-weight:800;color:#94A3B8;cursor:pointer;" onclick="requestUnlock('parent')">🔒 家长登录</div>
+    <div id="syncStatus"><span class="sync-status-inner" style="color:#64748B;">🔄 连接中…</span></div>
+    <div id="lockChip" style="display:none;" class="unlocked-chip header-toolbar-chip" onclick="lockApp()">🔓 家长模式 · 点击锁定</div>
+    <button type="button" id="viewChip" class="view-chip" onclick="requestUnlock('parent')">🔒 家长登录</button>
   </div>
 </div>
 
@@ -571,6 +583,7 @@ function load(){
           startDate = new Date(sdStr);
           document.getElementById('startDateInput').value = toISO(startDate);
         }
+        tryInitialSyncToToday();
         updateDateRange();
         renderDayTabs();
         renderDayPanel();
@@ -587,6 +600,43 @@ function load(){
   }
 }
 function toISO(d){return d.toISOString().split('T')[0];}
+function daysSinceProgramStart(calDay){
+  if(!startDate)return -1;
+  const anchor=new Date(startDate.getFullYear(),startDate.getMonth(),startDate.getDate());
+  const cur=new Date(calDay.getFullYear(),calDay.getMonth(),calDay.getDate());
+  if(cur<anchor)return -1;
+  let n=0;
+  const x=new Date(anchor);
+  while(x<cur){
+    x.setDate(x.getDate()+1);
+    n++;
+  }
+  return n;
+}
+function syncWeekDayToToday(){
+  if(!startDate)return;
+  const t=new Date();
+  const cur=new Date(t.getFullYear(),t.getMonth(),t.getDate());
+  const diff=daysSinceProgramStart(cur);
+  if(diff<0){
+    week=1;day=0;
+  } else if(diff>=WEEKS*7){
+    week=WEEKS;day=6;
+  } else {
+    week=Math.floor(diff/7)+1;
+    day=diff%7;
+  }
+  document.getElementById('weekLabel').textContent=`Week ${week}`;
+}
+function tryInitialSyncToToday(){
+  if(window._didInitialSyncToToday || !startDate)return;
+  if(unlocked){
+    window._didInitialSyncToToday = true;
+    return;
+  }
+  syncWeekDayToToday();
+  window._didInitialSyncToToday = true;
+}
 function getWeekDates(w){
   if(!startDate)return Array(7).fill(null);
   const b=new Date(startDate);
@@ -603,6 +653,7 @@ function onStartDateChange(){
   startDate=d;
   markLocalMutation();
   document.getElementById('startDateInput').value=toISO(d);
+  syncWeekDayToToday();
   updateDateRange();renderDayTabs();renderDayPanel();updateScores();refreshParentPanel();save();
 }
 function updateDateRange(){
@@ -745,7 +796,7 @@ function updateScores(){
   }
   const js=streak('jenn'),ks=streak('jess');
   const sh=`<span class="streak-chip">🔥 Jenn ${js}-day streak</span><span class="streak-chip">🔥 Jess ${ks}-day streak</span>`;
-  document.getElementById('streakRow').innerHTML=sh;
+  document.getElementById('streakChips').innerHTML=sh;
   updateChart();
 }
 
@@ -1072,6 +1123,8 @@ function lockApp(){
   document.getElementById('lockChip').style.display='none';
   document.getElementById('viewChip').style.display='inline-flex';
   document.getElementById('parentPanel').style.display='none';
+  syncWeekDayToToday();
+  updateDateRange();renderDayTabs();renderDayPanel();updateScores();
   toast('🔒 已锁定');
 }
 function changePwd(){
@@ -1127,6 +1180,7 @@ if(!startDate){
   startDate=d;
   document.getElementById('startDateInput').value=toISO(d);
 }
+tryInitialSyncToToday();
 updateDateRange();renderDayTabs();renderDayPanel();updateScores();
 </script>
 </body>
