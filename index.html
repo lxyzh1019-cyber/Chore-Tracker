@@ -378,18 +378,18 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
         <div class="week-label" id="weekLabel">Week 1</div>
         <button onclick="changeWeek(1)">›</button>
       </div>
-      <div class="header-week-below">
-        <div class="header-week-meta-left">
-          <div class="start-date-line">
-            <label class="start-date-label" id="startDateLabel" for="startDateInput" onclick="onStartDateInteract(event)">Week 1 Monday:</label>
-            <input type="date" class="date-input" id="startDateInput" onclick="onStartDateInteract(event)" onchange="onStartDateChange()">
-          </div>
-          <div class="streak-chips" id="streakChips"></div>
-        </div>
-        <div class="header-week-meta-right">
-          <span class="week-dates-sub" id="dateRange"></span>
-        </div>
+    </div>
+  </div>
+  <div class="header-week-below">
+    <div class="header-week-meta-left">
+      <div class="start-date-line">
+        <label class="start-date-label" id="startDateLabel" for="startDateInput" onclick="onStartDateInteract(event)">Week 1 Monday:</label>
+        <input type="date" class="date-input" id="startDateInput" onclick="onStartDateInteract(event)" onchange="onStartDateChange()">
       </div>
+      <div class="streak-chips" id="streakChips"></div>
+    </div>
+    <div class="header-week-meta-right">
+      <span class="week-dates-sub" id="dateRange"></span>
     </div>
   </div>
   <div class="header-toolbar">
