@@ -1197,16 +1197,28 @@ function changePwd(){
 // ── Restart 8-week programme ─────────────────────────────────────────────
 function restartProgram(){
   requestUnlock('action', ()=>{
-    if(!confirm('确定要重启 8 周计划吗？\n\n所有 8 周的打卡、可选项、目标和零花钱记录都将被清除，Week 1 周一会重置为本周一。\n\n此操作无法撤销！'))return;
+    if(!confirm('确定要重启 8 周计划吗？\n\n所有 8 周的打卡、可选项、目标和零花钱记录都将被清除。\n\n此操作无法撤销！'))return;
+    const today=new Date();
+    const defMon=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+    const dow=defMon.getDay();
+    defMon.setDate(defMon.getDate()+(dow===1?0:dow===0?-6:1-dow));
+    const defaultISO=toISO(defMon);
+    const input=prompt('请输入 Week 1 的起始日期 (YYYY-MM-DD)：\n默认为本周一。', defaultISO);
+    if(input===null)return;
+    const v=(input||'').trim()||defaultISO;
+    const parsed=new Date(v+'T00:00:00');
+    if(isNaN(parsed.getTime())){toast('❌ 日期格式无效');return;}
+    const allowAny=document.getElementById('allowAnyStartDay');
+    let d=parsed;
+    if(!(allowAny&&allowAny.checked)){
+      const pdow=d.getDay();
+      d.setDate(d.getDate()+(pdow===1?0:pdow===0?-6:1-pdow));
+    }
     data={};
     opt={};
     goals={};
     goalBonusFired={};
     init();
-    const today=new Date();
-    const dow=today.getDay();
-    const d=new Date(today.getFullYear(),today.getMonth(),today.getDate());
-    d.setDate(d.getDate()+(dow===1?0:dow===0?-6:1-dow));
     startDate=d;
     document.getElementById('startDateInput').value=toISO(d);
     week=1;day=0;
