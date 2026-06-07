@@ -499,6 +499,10 @@ body { font-family: 'Nunito', sans-serif; background: var(--bg); color: var(--te
     </div>
   </div>
   <button class="goal-save-btn" onclick="saveGoals()">💾 保存本周目标</button>
+  <label style="display:flex;align-items:center;gap:8px;margin-top:10px;font-size:.78rem;font-weight:700;color:var(--muted);cursor:pointer;">
+    <input type="checkbox" id="allowAnyStartDay" onchange="toast(this.checked?'✅ 已允许自定义起始日':'🔒 起始日恢复为周一')" style="width:16px;height:16px;cursor:pointer;">
+    允许 Week 1 起始日为任意日期（不强制周一）
+  </label>
   <div style="margin-top:14px;border-top:1px dashed var(--border);padding-top:12px;">
     <div style="font-size:.78rem;font-weight:800;color:var(--muted);margin-bottom:8px;">🔑 修改密码</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
@@ -686,8 +690,11 @@ function onStartDateChange(){
   const v=document.getElementById('startDateInput').value;
   if(!v)return;
   const d=new Date(v+'T00:00:00');
-  const dow=d.getDay();
-  d.setDate(d.getDate()+(dow===1?0:dow===0?-6:1-dow));
+  const allowAny=document.getElementById('allowAnyStartDay');
+  if(!(allowAny&&allowAny.checked)){
+    const dow=d.getDay();
+    d.setDate(d.getDate()+(dow===1?0:dow===0?-6:1-dow));
+  }
   startDate=d;
   markLocalMutation();
   document.getElementById('startDateInput').value=toISO(d);
